@@ -88,7 +88,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                         {
                         val = Float.valueOf(fields[5]);
                         }catch(IndexOutOfBoundsException e) {
-                        LOG.error("File "+ fileName + " does not contain column 5");
+                        LOG.warn("File "+ fileName + " is not properly formatted");
                         }
                         Text roadName = new Text(fileName.split("_")[0]);
                         Text fileNameText = new Text(fileName);
