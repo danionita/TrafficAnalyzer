@@ -35,6 +35,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -65,10 +66,10 @@ public class CarCount extends Configured implements Tool {
 	 * Mapper
 	 */
 	public static class MyMapper extends
-			Mapper<Writable, Text, Text, Writable> {
+			Mapper<Writable, Text, Text, TwovalueWritable> {
 		// have to be equal to the last two type arguments to Mapper<> above
 		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = IntWritable.class;
+		public static final Class<?> VOUT = TwovalueWritable.class;
 
 		@Override
 		public void setup(Context context) throws IOException,
@@ -112,7 +113,7 @@ public class CarCount extends Configured implements Tool {
 	 * Reducer
 	 */
 	public static class MyReducer extends
-			Reducer<Text, IntWritable, Text, IntWritable> {
+			Reducer<Text, TwovalueWritable, Text, FloatWritable> {
 		// have to be equal to the last two type arguments to Reducer<> above
 		public static final Class<?> KOUT = Text.class;
 		public static final Class<?> VOUT = IntWritable.class;
@@ -134,7 +135,7 @@ public class CarCount extends Configured implements Tool {
 				sum += counts.getFirst();
                                 count += counts.getSecond();
 			}
-			context.write(key, new IntWritable(sum/count));
+			context.write(key, new FloatWritable(sum/count));
 		}
 
 		@Override
