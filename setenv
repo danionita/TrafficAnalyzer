@@ -1,6 +1,6 @@
 export PROJECT_HOME=$PWD
 export LIBJARS=$(echo $PROJECT_HOME/target/lib/*.jar | tr ' ' ',')
-CLASS_PREFIX=nl.utwente.bigdata
+CLASS_PREFIX=nl.utwente
 
 function runTool() {
         name=$1
