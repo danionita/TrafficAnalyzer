@@ -62,7 +62,7 @@ public class Grouper {
                     List list = readCsvFile(hmap.get(street).get(i));
                     for (Object line : list) {
                         CSVRecord record = (CSVRecord) line;
-                        for (int j = 0; j < 5; j++) {
+                        for (int j = 0; j < 6; j++) {
                             writer.append(record.get(j));
                             writer.append(',');
                         }
