@@ -82,8 +82,14 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		public void map(Writable key, Text line, Context context)
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
-                        double val = Float.valueOf(fields[5]);
                         String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+                        double val = 0;
+                        try
+                        {
+                        val = Float.valueOf(fields[5]);
+                        }catch(IndexOutOfBoundsException e) {
+                        LOG.error("File "+ fileName + " does not contain column 5");
+                        }
                         Text roadName = new Text(fileName.split("_")[0]);
                         Text fileNameText = new Text(fileName);
 			context.write(fileNameText, new TwovalueWritable(val,1));
