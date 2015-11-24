@@ -1,7 +1,11 @@
 package nl.utwente.trafficanalyzer;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileStatus;
@@ -9,6 +13,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+
 
 
 public class Utils {
@@ -52,12 +57,6 @@ public class Utils {
 		}
 	}
 	
-	private static CSVParser parser = new CSVParser();
-	public static String getSensorID(String tweet) {
-		try {
-			return parser.parse(tweet).getAsJsonObject().get("text").getAsString();
-		} catch (Exception e) {
-			return "";
-		}
-	}
+
+
 }
