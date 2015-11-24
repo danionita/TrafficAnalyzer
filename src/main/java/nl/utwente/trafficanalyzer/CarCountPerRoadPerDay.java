@@ -59,7 +59,7 @@ import org.apache.log4j.Logger;
  * Tool to count words in text.
  *
  */
-public class CarCount extends Configured implements Tool {
+public class CarCountPerRoadPerDay extends Configured implements Tool {
 	private static final Logger LOG = Logger.getLogger(CarCount.class);
 
 	/*
@@ -131,12 +131,10 @@ public class CarCount extends Configured implements Tool {
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
 			int sum = 0;
-                        int count = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
-                                count += counts.getSecond();
 			}
-			context.write(key, new FloatWritable(sum/count));
+			context.write(key, new FloatWritable(sum));
 		}
 
 		@Override
@@ -252,7 +250,7 @@ public class CarCount extends Configured implements Tool {
 		return 0;
 	}
 
-	public CarCount() {
+	public CarCountPerRoadPerDay() {
 	}
 
 	public static void main(String[] args) throws Exception {
