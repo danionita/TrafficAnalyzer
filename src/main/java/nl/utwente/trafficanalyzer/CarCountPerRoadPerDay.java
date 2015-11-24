@@ -260,6 +260,6 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new CarCount(), args);
+		ToolRunner.run(new CarCountPerRoadPerDay(), args);
 	}
 }
