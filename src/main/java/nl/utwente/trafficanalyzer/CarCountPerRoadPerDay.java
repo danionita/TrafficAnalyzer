@@ -135,7 +135,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                 @Override
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
-			int sum = 0;
+			float sum = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
 			}
