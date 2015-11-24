@@ -90,9 +90,8 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                         }catch(IndexOutOfBoundsException e) {
                         LOG.warn("File "+ fileName + " is not properly formatted");
                         }
-                        Text roadName = new Text(fileName.split("_")[0]);
-                        Text fileNameText = new Text(fileName);
-			context.write(fileNameText, new TwovalueWritable(val,1));
+                        Text roadDayYear = new Text(fileName.split(".")[0]+"_"+fields[4]+"_"+fields[3]);
+			context.write(roadDayYear, new TwovalueWritable(val,1));
 		}
 
 		@Override
