@@ -82,7 +82,7 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
             LOG.info("Starting MyMapper");
 
             try {
-                Path pt = new Path("hdfs://ctit048.ewi.utwente.nl:9000/user/ionitad/ReadingsPerSensor.csv");
+                Path pt = new Path("hdfs://ctit048.ewi.utwente.nl/user/ionitad/ReadingsPerSensor.csv");
                 FileSystem fs = FileSystem.get(new Configuration());
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(pt)));
                 String line;
