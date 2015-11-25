@@ -90,8 +90,9 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                         }catch(IndexOutOfBoundsException e) {
                         LOG.warn("File "+ fileName + " is not properly formatted");
                         }
-                        Text roadDayYear = new Text(fileName.substring(0, fileName.lastIndexOf('.'))+"_"+fields[4]+"_"+fields[3]);
+                        Text roadDayYear = new Text(fileName.substring(0, fileName.lastIndexOf('.'))+"_"+fields[3]+"_"+fields[4]);
 			context.write(roadDayYear, new TwovalueWritable(val,1));
+                        System.out.println(" ");
 		}
 
 		@Override
@@ -152,7 +153,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 			Reducer<Text, TwovalueWritable, Text, FloatWritable> {
 		// have to be equal to the last two type arguments to Reducer<> above
 		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = IntWritable.class;
+		public static final Class<?> VOUT = FloatWritable.class;
 
 		@Override
 		public void setup(Context context) throws IOException,
@@ -216,7 +217,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		job.setMapOutputValueClass(MyMapper.VOUT);
 
 		// ---- Combiner
-		//job.setCombinerClass(MyCombiner.class);
+		job.setCombinerClass(MyCombiner.class);
 
 		// ---- Partitioner
 		// job.setPartitionerClass(MyPartitioner.class);
