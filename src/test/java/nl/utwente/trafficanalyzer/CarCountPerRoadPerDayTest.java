@@ -31,20 +31,24 @@ public class CarCountPerRoadPerDayTest {
 	@Test
 	public void testMapper() throws IOException {
 		mapDriver.addInput(NullWritable.get(),
-				new Text("RWS01_MONICA_10D001009C00D0050009,2,A1,2010,7,16282.03,"));
+				new Text("RWS01_MONICA_00D001074023D007000F,2,A1,2010,7,21258.2,\n"));
+                mapDriver.addInput(NullWritable.get(),
+				new Text("\"RWS01_MONICA_00D001074023D007000F,3,A1,2010,7,351.17,\n"));
 
-		mapDriver.withOutput(new Text("A1"), new IntWritable(1));
 
+                mapDriver.withOutput(new Text("A1_2010_7"), new TwovalueWritable(21258.19921875,1.0));
+		mapDriver.withOutput(new Text("A1_2010_7"), new TwovalueWritable(351.1700134277344,1.0));
+                
 		mapDriver.runTest();
 	}
 
 	@Test
 	public void testReduce() throws IOException {
 
-		reduceDriver.withInput(new Text("hello"), Lists.newArrayList(
-				new IntWritable(1), new IntWritable(2), new IntWritable(3)));
+		reduceDriver.withInput(new Text("A1_2010_7"), Lists.newArrayList(
+				new TwovalueWritable(351.1700134277344,1.0), new TwovalueWritable(21258.19921875,1.0)));
 
-		reduceDriver.withOutput(new Text("hello"), new IntWritable(6));
+		reduceDriver.withOutput(new Text("A1_2010_7"), new DoubleWritable(21609.369232177734));
 
 		reduceDriver.runTest();
 	}
