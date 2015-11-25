@@ -73,7 +73,7 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
 
         public static final Class<?> KOUT = Text.class;
         public static final Class<?> VOUT = TwovalueWritable.class;
-        private List<String> validSensors = new ArrayList<>();
+        private final List<String> validSensors = new ArrayList<>();
 
         @Override
         public void setup(Context context) throws IOException,
@@ -89,9 +89,12 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
                 line = br.readLine();
                 while (line != null) {
                     validSensors.add(line.split(",")[0]);
+                    LOG.info("Adding sensor: "+line.split(",")[0]);
                 }
             } catch (Exception e) {
+                   LOG.warn("Could not load valid sensor file");
             }
+            LOG.info("TOTAL VALID SENSORS: "+ validSensors.size());
 
         }
 
@@ -105,8 +108,10 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
             val = Float.valueOf(fields[5]);
 
             Text roadDayYear = new Text(fields[2] + "\t" + fields[3] + "\t" + fields[4]);
+            //LOG.info("checking sensor: "+fields[0]);
             if(validSensors.contains(fields[0])){
             context.write(roadDayYear, new TwovalueWritable(val, 1));
+            LOG.info("VALID meadurement found!");
             }
         }
 
