@@ -23,8 +23,8 @@ package nl.utwente.trafficanalyzer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -73,7 +73,7 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
 
         public static final Class<?> KOUT = Text.class;
         public static final Class<?> VOUT = TwovalueWritable.class;
-        private final List<String> validSensors = new ArrayList<>();
+        private final Set<String> validSensors = new TreeSet<>();
 
         @Override
         public void setup(Context context) throws IOException,
