@@ -60,17 +60,17 @@ import org.apache.log4j.Logger;
  * Tool to count words in text.
  *
  */
-public class SensorCountPerRoadPerDay extends Configured implements Tool {
-	private static final Logger LOG = Logger.getLogger(SensorCountPerRoadPerDay.class);
+public class ReadingsPerSensor extends Configured implements Tool {
+	private static final Logger LOG = Logger.getLogger(ReadingsPerSensor.class);
 
 	/*
 	 * Mapper
 	 */
 	public static class MyMapper extends
-			Mapper<Writable, Text, Text, TwovalueWritable> {
+			Mapper<Writable, Text, Text, IntWritable> {
 		// have to be equal to the last two type arguments to Mapper<> above
 		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = TwovalueWritable.class;
+		public static final Class<?> VOUT = IntWritable.class;
 
 		@Override
 		public void setup(Context context) throws IOException,
@@ -84,16 +84,9 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
                         String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
-                        double val = 0;
-                        
-//                        try
-//                        {
-                        val = Float.valueOf(fields[5]);
-//                        }catch(IndexOutOfBoundsException e) {
-//                        LOG.warn("File "+ fileName + " is not properly formatted");
-//                        }
-                        Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
-			context.write(roadDayYear, new TwovalueWritable(val,1));
+
+                        Text sensorID = new Text(fields[0]);
+			context.write(sensorID, new IntWritable(1));
                         System.out.println(" ");
 		}
 
@@ -111,7 +104,7 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 	 * to be equal to MyReducer.
 	 */
 	public static class MyCombiner extends
-			Reducer<Text, TwovalueWritable, Text, TwovalueWritable> {
+			Reducer<Text, IntWritable, Text, IntWritable> {
 		@Override
 		public void setup(Context context) throws IOException,
 				InterruptedException {
@@ -119,15 +112,14 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 		}
 
 		@Override
-		public void reduce(Text key, Iterable<TwovalueWritable> values,
+		public void reduce(Text key, Iterable<IntWritable> values,
 				Context context) throws IOException, InterruptedException {
-			double sum = 0;
-                        double count = 0;
-			for (TwovalueWritable counts : values) {
-				sum += counts.getFirst();
-                                count += counts.getSecond();
+
+                        int count = 0;
+			for (IntWritable counts : values) {
+				count += counts.get();
 			}
-			context.write(key, new TwovalueWritable(sum,count));
+			context.write(key, new IntWritable(count));
 		}
 
 		@Override
@@ -154,7 +146,7 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 	 * Reducer
 	 */
 	public static class MyReducer extends
-			Reducer<Text, TwovalueWritable, Text, IntWritable> {
+			Reducer<Text, IntWritable, Text, IntWritable> {
 		// have to be equal to the last two type arguments to Reducer<> above
 		public static final Class<?> KOUT = Text.class;
 		public static final Class<?> VOUT = IntWritable.class;
@@ -168,18 +160,14 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 		}
                 
                 @Override
-		public void reduce(Text key, Iterable<TwovalueWritable> values,
+		public void reduce(Text key, Iterable<IntWritable> values,
 				Context context) throws IOException, InterruptedException {
-			double sum = 0;
-                        double count = 0;
-			for (TwovalueWritable counts : values) {
-				sum += counts.getFirst();
-                                count += counts.getSecond();
+
+                        int count = 0;
+			for (IntWritable counts : values) {
+                                count += counts.get();
 			}
-                        
-                        int roundedSum = (int)Math.round(sum);
-                        int roundedCount = (int)Math.round(count);
-			context.write(key, new IntWritable(roundedCount));
+			context.write(key, new IntWritable(count));
 		}
 
 		@Override
@@ -192,7 +180,7 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 	public void run(String inputPath, String outPath) throws Exception {
 		Configuration conf = getConf();
 		Job job = Job.getInstance(conf);
-		job.setJarByClass(SensorCountPerRoadPerDay.class);
+		job.setJarByClass(ReadingsPerSensor.class);
 		job.setJobName(String.format("%s [%s, %s]", this.getClass()
 				.getName(), inputPath, outPath));
 
@@ -295,10 +283,10 @@ public class SensorCountPerRoadPerDay extends Configured implements Tool {
 		return 0;
 	}
 
-	public SensorCountPerRoadPerDay() {
+	public ReadingsPerSensor() {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new SensorCountPerRoadPerDay(), args);
+		ToolRunner.run(new ReadingsPerSensor(), args);
 	}
 }
