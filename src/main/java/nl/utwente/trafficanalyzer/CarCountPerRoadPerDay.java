@@ -85,13 +85,15 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 			String[] fields = line.toString().split(",");
                         //String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
                         double val = 0;
+                        
+                        LOG.warn(fields[5] + " " + val);
+                        LOG.warn(line);
                         //try
                         //{
                         val = Float.valueOf(fields[5]);
                         //}catch(IndexOutOfBoundsException e) {
                         //LOG.warn("File "+ fileName + " is not properly formatted");
                         //}
-                        LOG.warn(fields[5] + " " + val);
                         Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
 			context.write(roadDayYear, new TwovalueWritable(val,1));
                         System.out.println(" ");
