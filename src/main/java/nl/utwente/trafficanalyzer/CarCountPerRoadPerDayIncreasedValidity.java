@@ -86,11 +86,12 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
                 FileSystem fs = FileSystem.get(new Configuration());
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(pt)));
                 String line;
-                line = br.readLine();
-                while (line != null) {
+                while ((line = br.readLine()) != null) {
                     validSensors.add(line.split(",")[0]);
                     LOG.info("Adding sensor: "+line.split(",")[0]);
+                    
                 }
+                
             } catch (Exception e) {
                    LOG.warn("Could not load valid sensor file");
             }
