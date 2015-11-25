@@ -20,7 +20,9 @@ package nl.utwente.trafficanalyzer;
  * implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +45,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -65,33 +68,46 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
 	 * Mapper
      */
     public static class MyMapper extends
-            Mapper<Writable, Text, Text, TwoObjectWritable> {
+            Mapper<Writable, Text, Text, TwovalueWritable> {
         // have to be equal to the last two type arguments to Mapper<> above
 
         public static final Class<?> KOUT = Text.class;
-        public static final Class<?> VOUT = TwoObjectWritable.class;
+        public static final Class<?> VOUT = TwovalueWritable.class;
+        private List<String> validSensors = new ArrayList<>();
 
         @Override
         public void setup(Context context) throws IOException,
                 InterruptedException {
             super.setup(context);
             LOG.info("Starting MyMapper");
+
+            try {
+                Path pt = new Path("hdfs://http://ctit048.ewi.utwente.nl:9000/user/ionitad/ReadingsPerSensor.csv");
+                FileSystem fs = FileSystem.get(new Configuration());
+                BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(pt)));
+                String line;
+                line = br.readLine();
+                while (line != null) {
+                    validSensors.add(line.split(",")[0]);
+                }
+            } catch (Exception e) {
+            }
+
         }
 
         @Override
         public void map(Writable key, Text line, Context context)
                 throws IOException, InterruptedException {
             String[] fields = line.toString().split(",");
-            int laneNumber = Integer.parseInt(fields[1]);
-            if (laneNumber == 99) {
-                laneNumber = 1;
+            String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+            double val = 0;
+
+            val = Float.valueOf(fields[5]);
+
+            Text roadDayYear = new Text(fields[2] + "_" + fields[3] + "_" + fields[4]);
+            if(validSensors.contains(fields[0])){
+            context.write(roadDayYear, new TwovalueWritable(val, 1));
             }
-
-            Text sensorID = new Text(fields[0] + "\t" + laneNumber);
-
-            Text measurement = new Text(fields[2] + "_" + fields[3] + "_" + fields[4] + "_" + fields[5]);
-            context.write(sensorID, new TwoObjectWritable(measurement.toString(), 1));
-            System.out.println(" ");
         }
 
         @Override
@@ -106,7 +122,7 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
 	 * to be equal to MyReducer.
      */
     public static class MyCombiner extends
-            Reducer<Text, TwoObjectWritable, Text, IntWritable> {
+            Reducer<Text, TwovalueWritable, Text, TwovalueWritable> {
 
         @Override
         public void setup(Context context) throws IOException,
@@ -115,22 +131,13 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
         }
 
         @Override
-        public void reduce(Text key, Iterable<TwoObjectWritable> values,
+        public void reduce(Text key, Iterable<TwovalueWritable> values,
                 Context context) throws IOException, InterruptedException {
-            int count = 0;
-            List<String> measurements = new ArrayList<>();
-            for (TwoObjectWritable counts : values) {
-                count += counts.getSecond();
-                measurements.add(counts.getFirst());
+            double sum = 0;
+            for (TwovalueWritable counts : values) {
+                sum += counts.getFirst();
             }
-            if (count > 1500) {
-                for (String measurement : measurements) {
-                    String[] fields = measurement.split("_");
-                    String roadDayYear = fields[0]+"\t"+fields[1]+"\t"+fields[2];
-                    int counter = (int) Math.round(Double.parseDouble(fields[3]));
-                    context.write(new Text(roadDayYear), new IntWritable(count));
-                }
-            }
+            context.write(key, new TwovalueWritable(sum, 1));
         }
 
         @Override
@@ -157,7 +164,7 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
 	 * Reducer
      */
     public static class MyReducer extends
-            Reducer<Text, IntWritable, Text, IntWritable> {
+            Reducer<Text, TwovalueWritable, Text, IntWritable> {
         // have to be equal to the last two type arguments to Reducer<> above
 
         public static final Class<?> KOUT = Text.class;
@@ -172,11 +179,11 @@ public class CarCountPerRoadPerDayIncreasedValidity extends Configured implement
         }
 
         @Override
-        public void reduce(Text key, Iterable<IntWritable> values,
+        public void reduce(Text key, Iterable<TwovalueWritable> values,
                 Context context) throws IOException, InterruptedException {
             double sum = 0;
-            for (IntWritable counts : values) {
-                sum += counts.get();
+            for (TwovalueWritable counts : values) {
+                sum += counts.getFirst();
             }
             int roundedSum = (int) Math.round(sum);
             context.write(key, new IntWritable(roundedSum));
