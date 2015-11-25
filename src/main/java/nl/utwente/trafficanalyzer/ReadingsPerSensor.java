@@ -84,8 +84,11 @@ public class ReadingsPerSensor extends Configured implements Tool {
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
                         String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
-
-                        Text sensorID = new Text(fields[0]+"\t"+fields[1]);
+                        int laneNumber = Integer.parseInt(fields[1]);
+                        if(laneNumber==99){
+                            laneNumber=1;
+                        }
+                        Text sensorID = new Text(fields[0]+"\t"+laneNumber);
 			context.write(sensorID, new IntWritable(1));
                         System.out.println(" ");
 		}
