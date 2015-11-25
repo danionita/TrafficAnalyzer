@@ -83,15 +83,15 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		public void map(Writable key, Text line, Context context)
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
-                        String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+                        //String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
                         double val = 0;
-                        try
-                        {
+                        //try
+                        //{
                         val = Float.valueOf(fields[5]);
-                        }catch(IndexOutOfBoundsException e) {
-                        LOG.warn("File "+ fileName + " is not properly formatted");
-                        }
-                        Text roadDayYear = new Text(fileName.substring(0, fileName.lastIndexOf('.'))+"_"+fields[3]+"_"+fields[4]);
+                        //}catch(IndexOutOfBoundsException e) {
+                        //LOG.warn("File "+ fileName + " is not properly formatted");
+                        //}
+                        Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
 			context.write(roadDayYear, new TwovalueWritable(val,1));
                         System.out.println(" ");
 		}
