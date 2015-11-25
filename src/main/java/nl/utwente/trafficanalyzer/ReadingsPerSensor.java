@@ -83,7 +83,6 @@ public class ReadingsPerSensor extends Configured implements Tool {
 		public void map(Writable key, Text line, Context context)
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
-                        String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
                         int laneNumber = Integer.parseInt(fields[1]);
                         if(laneNumber==99){
                             laneNumber=1;
