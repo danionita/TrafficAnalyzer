@@ -35,6 +35,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -119,7 +120,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		@Override
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
-			float sum = 0;
+			double sum = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
 			}
@@ -150,10 +151,10 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 	 * Reducer
 	 */
 	public static class MyReducer extends
-			Reducer<Text, TwovalueWritable, Text, FloatWritable> {
+			Reducer<Text, TwovalueWritable, Text, DoubleWritable> {
 		// have to be equal to the last two type arguments to Reducer<> above
 		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = FloatWritable.class;
+		public static final Class<?> VOUT = DoubleWritable.class;
 
 		@Override
 		public void setup(Context context) throws IOException,
@@ -166,11 +167,11 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                 @Override
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
-			float sum = 0;
+			double sum = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
 			}
-			context.write(key, new FloatWritable(sum));
+			context.write(key, new DoubleWritable(sum));
 		}
 
 		@Override
@@ -224,7 +225,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 
 		// ---- Reducer
 		// set the number of reducers to influence the number of output files
-		// job.setNumReduceTasks(100);
+		job.setNumReduceTasks(1);
 		job.setReducerClass(MyReducer.class);
 		job.setOutputKeyClass(MyReducer.KOUT);
 		job.setOutputValueClass(MyReducer.VOUT);
