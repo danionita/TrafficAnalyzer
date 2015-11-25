@@ -86,8 +86,8 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
                         //String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
                         double val = 0;
                         
-                        LOG.warn(fields[5] + " " + val);
                         LOG.warn(line);
+                        LOG.warn(fields[5] + " " + val);
                         //try
                         //{
                         val = Float.valueOf(fields[5]);
