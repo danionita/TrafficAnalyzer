@@ -48,7 +48,7 @@ public class CarCountPerRoadPerDayTest {
 		reduceDriver.withInput(new Text("A1_2010_7"), Lists.newArrayList(
 				new TwovalueWritable(351.1700134277344,1.0), new TwovalueWritable(21258.19921875,1.0)));
 
-		reduceDriver.withOutput(new Text("A1_2010_7"), new DoubleWritable(21609.369232177734));
+		reduceDriver.withOutput(new Text("A1_2010_7"), new IntWritable(21609));
 
 		reduceDriver.runTest();
 	}
