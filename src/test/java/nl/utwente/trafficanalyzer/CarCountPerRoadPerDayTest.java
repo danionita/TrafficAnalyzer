@@ -17,7 +17,7 @@ import org.apache.hadoop.io.DoubleWritable;
 public class CarCountPerRoadPerDayTest {
 
 	private MapDriver<Writable, Text, Text, TwovalueWritable> mapDriver;
-	private ReduceDriver<Text, TwovalueWritable, Text, DoubleWritable> reduceDriver;
+	private ReduceDriver<Text, TwovalueWritable, Text, IntWritable> reduceDriver;
 
 	@Before
 	public void setUp() {
