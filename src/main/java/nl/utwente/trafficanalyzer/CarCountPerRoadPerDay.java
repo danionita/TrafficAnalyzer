@@ -61,7 +61,7 @@ import org.apache.log4j.Logger;
  *
  */
 public class CarCountPerRoadPerDay extends Configured implements Tool {
-	private static final Logger LOG = Logger.getLogger(CarCount.class);
+	private static final Logger LOG = Logger.getLogger(CarCountPerRoadPerDay.class);
 
 	/*
 	 * Mapper
@@ -83,17 +83,17 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		public void map(Writable key, Text line, Context context)
 				throws IOException, InterruptedException {
 			String[] fields = line.toString().split(",");
-                        //String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+                        String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
                         double val = 0;
                         
-                        LOG.warn(line);
-                        LOG.warn(fields[5] + " " + val);
-                        //try
-                        //{
+                        //LOG.warn(line);
+                        //LOG.warn(fields[5] + " " + val);
+                        try
+                        {
                         val = Float.valueOf(fields[5]);
-                        //}catch(IndexOutOfBoundsException e) {
-                        //LOG.warn("File "+ fileName + " is not properly formatted");
-                        //}
+                        }catch(IndexOutOfBoundsException e) {
+                        LOG.warn("File "+ fileName + " is not properly formatted");
+                        }
                         Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
 			context.write(roadDayYear, new TwovalueWritable(val,1));
                         System.out.println(" ");
@@ -187,7 +187,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 	public void run(String inputPath, String outPath) throws Exception {
 		Configuration conf = getConf();
 		Job job = Job.getInstance(conf);
-		job.setJarByClass(CarCount.class);
+		job.setJarByClass(CarCountPerRoadPerDay.class);
 		job.setJobName(String.format("%s [%s, %s]", this.getClass()
 				.getName(), inputPath, outPath));
 
