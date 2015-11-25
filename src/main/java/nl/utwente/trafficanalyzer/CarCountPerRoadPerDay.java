@@ -104,6 +104,36 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 
 
 	/*
+	 * Combiner Input has to be equal to the output of MyMapper and output has
+	 * to be equal to MyReducer.
+	 */
+	public static class MyCombiner extends
+			Reducer<Text, TwovalueWritable, Text, TwovalueWritable> {
+		@Override
+		public void setup(Context context) throws IOException,
+				InterruptedException {
+			super.setup(context);
+		}
+
+		@Override
+		public void reduce(Text key, Iterable<TwovalueWritable> values,
+				Context context) throws IOException, InterruptedException {
+			float sum = 0;
+			for (TwovalueWritable counts : values) {
+				sum += counts.getFirst();
+			}
+			context.write(key, new TwovalueWritable(sum,1));
+		}
+
+		@Override
+		public void cleanup(Context context) throws IOException,
+				InterruptedException {
+			super.cleanup(context);
+		}
+	}
+
+
+	/*
 	 * Partitioner The partitioner determines in which partition a record is
 	 * shuffled before the reducer is called.
 	 */
