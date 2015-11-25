@@ -60,8 +60,8 @@ import org.apache.log4j.Logger;
  * Tool to count words in text.
  *
  */
-public class CarCountPerRoadPerDay extends Configured implements Tool {
-	private static final Logger LOG = Logger.getLogger(CarCountPerRoadPerDay.class);
+public class SensorCountPerRoadPerDay extends Configured implements Tool {
+	private static final Logger LOG = Logger.getLogger(SensorCountPerRoadPerDay.class);
 
 	/*
 	 * Mapper
@@ -92,7 +92,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 //                        }catch(IndexOutOfBoundsException e) {
 //                        LOG.warn("File "+ fileName + " is not properly formatted");
 //                        }
-                        Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
+                        Text roadDayYear = new Text(fields[2]+"\t"+fields[3]+"\t"+fields[4]);
 			context.write(roadDayYear, new TwovalueWritable(val,1));
                         System.out.println(" ");
 		}
@@ -122,10 +122,12 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
 			double sum = 0;
+                        double count = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
+                                count += counts.getSecond();
 			}
-			context.write(key, new TwovalueWritable(sum,1));
+			context.write(key, new TwovalueWritable(sum,count));
 		}
 
 		@Override
@@ -169,11 +171,15 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		public void reduce(Text key, Iterable<TwovalueWritable> values,
 				Context context) throws IOException, InterruptedException {
 			double sum = 0;
+                        double count = 0;
 			for (TwovalueWritable counts : values) {
 				sum += counts.getFirst();
+                                count += counts.getSecond();
 			}
+                        
                         int roundedSum = (int)Math.round(sum);
-			context.write(key, new IntWritable(roundedSum));
+                        int roundedCount = (int)Math.round(count);
+			context.write(key, new IntWritable(roundedCount));
 		}
 
 		@Override
@@ -186,7 +192,7 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 	public void run(String inputPath, String outPath) throws Exception {
 		Configuration conf = getConf();
 		Job job = Job.getInstance(conf);
-		job.setJarByClass(CarCountPerRoadPerDay.class);
+		job.setJarByClass(SensorCountPerRoadPerDay.class);
 		job.setJobName(String.format("%s [%s, %s]", this.getClass()
 				.getName(), inputPath, outPath));
 
@@ -289,10 +295,10 @@ public class CarCountPerRoadPerDay extends Configured implements Tool {
 		return 0;
 	}
 
-	public CarCountPerRoadPerDay() {
+	public SensorCountPerRoadPerDay() {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new CarCountPerRoadPerDay(), args);
+		ToolRunner.run(new SensorCountPerRoadPerDay(), args);
 	}
 }
