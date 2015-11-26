@@ -20,9 +20,8 @@ package nl.utwente.trafficanalyzer;
  * implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
-
 import java.io.IOException;
+import java.util.Calendar;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -61,244 +60,245 @@ import org.apache.log4j.Logger;
  *
  */
 public class SensorCountPerRoadPerDay extends Configured implements Tool {
-	private static final Logger LOG = Logger.getLogger(SensorCountPerRoadPerDay.class);
 
-	/*
+    private static final Logger LOG = Logger.getLogger(SensorCountPerRoadPerDay.class);
+    private static final Calendar calendar = Calendar.getInstance();
+
+    /*
 	 * Mapper
-	 */
-	public static class MyMapper extends
-			Mapper<Writable, Text, Text, TwovalueWritable> {
-		// have to be equal to the last two type arguments to Mapper<> above
-		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = TwovalueWritable.class;
+     */
+    public static class MyMapper extends
+            Mapper<Writable, Text, Text, TwovalueWritable> {
+        // have to be equal to the last two type arguments to Mapper<> above
 
-		@Override
-		public void setup(Context context) throws IOException,
-				InterruptedException {
-			super.setup(context);
-			LOG.info("Starting MyMapper");
-		}
+        public static final Class<?> KOUT = Text.class;
+        public static final Class<?> VOUT = TwovalueWritable.class;
 
-		@Override
-		public void map(Writable key, Text line, Context context)
-				throws IOException, InterruptedException {
-			String[] fields = line.toString().split(",");
-                        String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
-                        double val = 0;
-                        
-//                        try
-//                        {
-                        val = Float.valueOf(fields[5]);
-//                        }catch(IndexOutOfBoundsException e) {
-//                        LOG.warn("File "+ fileName + " is not properly formatted");
-//                        }
-                        Text roadDayYear = new Text(fields[2]+"_"+fields[3]+"_"+fields[4]);
-			context.write(roadDayYear, new TwovalueWritable(val,1));
-                        System.out.println(" ");
-		}
+        @Override
+        public void setup(Context context) throws IOException,
+                InterruptedException {
+            super.setup(context);
+            LOG.info("Starting MyMapper");
 
-		@Override
-		public void cleanup(Context context) throws IOException,
-				InterruptedException {
-			super.cleanup(context);
-		}
-	}
+        }
 
+        @Override
+        public void map(Writable key, Text line, Context context)
+                throws IOException, InterruptedException {
+            String[] fields = line.toString().split(",");
+            String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+            double val = 0;
 
+            val = Float.valueOf(fields[5]);
 
-	/*
+                            calendar.set(Calendar.DAY_OF_YEAR, Integer.parseInt(fields[4]));
+                            calendar.set(Calendar.YEAR, Integer.parseInt(fields[3]));
+            Text sensorDayYear = new Text(fields[0] + "\t" + calendar.get(Calendar.WEEK_OF_YEAR)+"\t"+fields[3]);
+            context.write(sensorDayYear, new TwovalueWritable(val, 1));
+            System.out.println(" ");
+        }
+
+        @Override
+        public void cleanup(Context context) throws IOException,
+                InterruptedException {
+            super.cleanup(context);
+        }
+    }
+
+    /*
 	 * Combiner Input has to be equal to the output of MyMapper and output has
 	 * to be equal to MyReducer.
-	 */
-	public static class MyCombiner extends
-			Reducer<Text, TwovalueWritable, Text, TwovalueWritable> {
-		@Override
-		public void setup(Context context) throws IOException,
-				InterruptedException {
-			super.setup(context);
-		}
+     */
+    public static class MyCombiner extends
+            Reducer<Text, TwovalueWritable, Text, TwovalueWritable> {
 
-		@Override
-		public void reduce(Text key, Iterable<TwovalueWritable> values,
-				Context context) throws IOException, InterruptedException {
-			double sum = 0;
-                        double count = 0;
-			for (TwovalueWritable counts : values) {
-				sum += counts.getFirst();
-                                count += counts.getSecond();
-			}
-			context.write(key, new TwovalueWritable(sum,count));
-		}
+        @Override
+        public void setup(Context context) throws IOException,
+                InterruptedException {
+            super.setup(context);
+        }
 
-		@Override
-		public void cleanup(Context context) throws IOException,
-				InterruptedException {
-			super.cleanup(context);
-		}
-	}
+        @Override
+        public void reduce(Text key, Iterable<TwovalueWritable> values,
+                Context context) throws IOException, InterruptedException {
+            double sum = 0;
+            double count = 0;
+            for (TwovalueWritable counts : values) {
+                sum += counts.getFirst();
+                //count += counts.getSecond();
+            }
+            context.write(key, new TwovalueWritable(sum, 1));
+        }
+
+        @Override
+        public void cleanup(Context context) throws IOException,
+                InterruptedException {
+            super.cleanup(context);
+        }
+    }
 
 
-	/*
+    /*
 	 * Partitioner The partitioner determines in which partition a record is
 	 * shuffled before the reducer is called.
-	 */
-	public static class MyPartitioner extends Partitioner<Text, IntWritable> {
+     */
+    public static class MyPartitioner extends Partitioner<Text, IntWritable> {
 
-		@Override
-		public int getPartition(Text key, IntWritable value, int numPartitions) {
-			return key.toString().hashCode() % numPartitions;
-		}
-	}
+        @Override
+        public int getPartition(Text key, IntWritable value, int numPartitions) {
+            return key.toString().hashCode() % numPartitions;
+        }
+    }
 
-	/*
+    /*
 	 * Reducer
-	 */
-	public static class MyReducer extends
-			Reducer<Text, TwovalueWritable, Text, IntWritable> {
-		// have to be equal to the last two type arguments to Reducer<> above
-		public static final Class<?> KOUT = Text.class;
-		public static final Class<?> VOUT = IntWritable.class;
+     */
+    public static class MyReducer extends
+            Reducer<Text, TwovalueWritable, Text, IntWritable> {
+        // have to be equal to the last two type arguments to Reducer<> above
 
-		@Override
-		public void setup(Context context) throws IOException,
-				InterruptedException {
-			super.setup(context);
-			LOG.info("Starting reducer");
+        public static final Class<?> KOUT = Text.class;
+        public static final Class<?> VOUT = IntWritable.class;
 
-		}
-                
-                @Override
-		public void reduce(Text key, Iterable<TwovalueWritable> values,
-				Context context) throws IOException, InterruptedException {
-			double sum = 0;
-                        double count = 0;
-			for (TwovalueWritable counts : values) {
-				sum += counts.getFirst();
-                                count += counts.getSecond();
-			}
-                        
-                        int roundedSum = (int)Math.round(sum);
-                        int roundedCount = (int)Math.round(count);
-			context.write(key, new IntWritable(roundedCount));
-		}
+        @Override
+        public void setup(Context context) throws IOException,
+                InterruptedException {
+            super.setup(context);
+            LOG.info("Starting reducer");
 
-		@Override
-		public void cleanup(Context context) throws IOException,
-				InterruptedException {
-			super.cleanup(context);
-		}
-	}
+        }
 
-	public void run(String inputPath, String outPath) throws Exception {
-		Configuration conf = getConf();
-		Job job = Job.getInstance(conf);
-		job.setJarByClass(SensorCountPerRoadPerDay.class);
-		job.setJobName(String.format("%s [%s, %s]", this.getClass()
-				.getName(), inputPath, outPath));
+        @Override
+        public void reduce(Text key, Iterable<TwovalueWritable> values,
+                Context context) throws IOException, InterruptedException {
+            double sum = 0;
+            //double count = 0;
+            for (TwovalueWritable counts : values) {
+                sum += counts.getFirst();
+                //count += counts.getSecond();
+            }
 
-		// -- check if output directory already exists; and optionally delete
-		String outputAlreadyExistsOption = "exit";
-		Path outDir = new Path(outPath);
-		if (FileSystem.get(conf).exists(outDir)) {
-			if (outputAlreadyExistsOption.equalsIgnoreCase("delete")) {
-				FileSystem.get(conf).delete(outDir, true);
-			} else {
-				System.err.println("Directory " + outPath + " already exists; exiting");
-				System.exit(1);
-			}
-		}
+            int roundedSum = (int) Math.round(sum);
+            //int roundedCount = (int)Math.round(count);
+            context.write(key, new IntWritable(roundedSum));
+        }
 
-		// ---- Input (Format) Options
-		String inputFormat = "text";
-		if (inputFormat.equalsIgnoreCase("text")) {
-			job.setInputFormatClass(TextInputFormat.class);
-		} else if (inputFormat.equalsIgnoreCase("text")) {
-			job.setInputFormatClass(SequenceFileInputFormat.class);
-		}
-		// Utils.recursivelyAddInputPaths(job, new Path(inputPath));
-		FileInputFormat.addInputPath(job, new Path(inputPath));
-		// Add files that should be available localy at each mapper
-		// Utils.addCacheFiles(job, new String[] { });
+        @Override
+        public void cleanup(Context context) throws IOException,
+                InterruptedException {
+            super.cleanup(context);
+        }
+    }
 
-		// ---- Mapper
-		job.setMapperClass(MyMapper.class);
-		job.setMapOutputKeyClass(MyMapper.KOUT);
-		job.setMapOutputValueClass(MyMapper.VOUT);
+    public void run(String inputPath, String outPath) throws Exception {
+        Configuration conf = getConf();
+        Job job = Job.getInstance(conf);
+        job.setJarByClass(SensorCountPerRoadPerDay.class);
+        job.setJobName(String.format("%s [%s, %s]", this.getClass()
+                .getName(), inputPath, outPath));
 
-		// ---- Combiner
-		job.setCombinerClass(MyCombiner.class);
+        // -- check if output directory already exists; and optionally delete
+        String outputAlreadyExistsOption = "exit";
+        Path outDir = new Path(outPath);
+        if (FileSystem.get(conf).exists(outDir)) {
+            if (outputAlreadyExistsOption.equalsIgnoreCase("delete")) {
+                FileSystem.get(conf).delete(outDir, true);
+            } else {
+                System.err.println("Directory " + outPath + " already exists; exiting");
+                System.exit(1);
+            }
+        }
 
-		// ---- Partitioner
-		// job.setPartitionerClass(MyPartitioner.class);
+        // ---- Input (Format) Options
+        String inputFormat = "text";
+        if (inputFormat.equalsIgnoreCase("text")) {
+            job.setInputFormatClass(TextInputFormat.class);
+        } else if (inputFormat.equalsIgnoreCase("text")) {
+            job.setInputFormatClass(SequenceFileInputFormat.class);
+        }
+        // Utils.recursivelyAddInputPaths(job, new Path(inputPath));
+        FileInputFormat.addInputPath(job, new Path(inputPath));
+        // Add files that should be available localy at each mapper
+        // Utils.addCacheFiles(job, new String[] { });
 
-		// ---- Reducer
-		// set the number of reducers to influence the number of output files
-		job.setNumReduceTasks(1);
-		job.setReducerClass(MyReducer.class);
-		job.setOutputKeyClass(MyReducer.KOUT);
-		job.setOutputValueClass(MyReducer.VOUT);
+        // ---- Mapper
+        job.setMapperClass(MyMapper.class);
+        job.setMapOutputKeyClass(MyMapper.KOUT);
+        job.setMapOutputValueClass(MyMapper.VOUT);
 
-		// ---- Output Options
-		String outputFormat = "text";
-		if (outputFormat.equalsIgnoreCase("sequence")) {
-			job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		} else if (outputFormat.equalsIgnoreCase("text")) {
-			job.setOutputFormatClass(TextOutputFormat.class);
-		} else if (outputFormat.equalsIgnoreCase("null")) {
-			job.setOutputFormatClass(NullOutputFormat.class);
-		}
-		FileOutputFormat.setOutputPath(job, outDir);
-		FileOutputFormat.setCompressOutput(job, false);
+        // ---- Combiner
+        job.setCombinerClass(MyCombiner.class);
 
-		// ---- Start job
-		job.waitForCompletion(true);
-		return;
-	}
+        // ---- Partitioner
+        // job.setPartitionerClass(MyPartitioner.class);
+        // ---- Reducer
+        // set the number of reducers to influence the number of output files
+        job.setNumReduceTasks(1);
+        job.setReducerClass(MyReducer.class);
+        job.setOutputKeyClass(MyReducer.KOUT);
+        job.setOutputValueClass(MyReducer.VOUT);
 
-	@SuppressWarnings("static-access")
-	@Override
-	public int run(String[] args) throws Exception {
-		Options options = new Options();
-		options.addOption(OptionBuilder.withArgName("path").hasArg()
-				.withDescription("Input").create("input"));
-		options.addOption(OptionBuilder.withArgName("path").hasArg()
-				.withDescription("Output").create("output"));
+        // ---- Output Options
+        String outputFormat = "text";
+        if (outputFormat.equalsIgnoreCase("sequence")) {
+            job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        } else if (outputFormat.equalsIgnoreCase("text")) {
+            job.setOutputFormatClass(TextOutputFormat.class);
+        } else if (outputFormat.equalsIgnoreCase("null")) {
+            job.setOutputFormatClass(NullOutputFormat.class);
+        }
+        FileOutputFormat.setOutputPath(job, outDir);
+        FileOutputFormat.setCompressOutput(job, false);
 
-		CommandLine cmdline;
-		CommandLineParser parser = new GnuParser();
-		try {
-			cmdline = parser.parse(options, args);
-		} catch (ParseException exp) {
-			System.err.println("Error parsing command line: "
-					+ exp.getMessage());
-			return -1;
-		}
+        // ---- Start job
+        job.waitForCompletion(true);
+        return;
+    }
 
-		String inputPath = cmdline.getOptionValue("input",
-				System.getenv("input"));
-		String outputPath = cmdline.getOptionValue("output",
-				System.getenv("output"));
+    @SuppressWarnings("static-access")
+    @Override
+    public int run(String[] args) throws Exception {
+        Options options = new Options();
+        options.addOption(OptionBuilder.withArgName("path").hasArg()
+                .withDescription("Input").create("input"));
+        options.addOption(OptionBuilder.withArgName("path").hasArg()
+                .withDescription("Output").create("output"));
 
-		if (inputPath == null || outputPath == null) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp(this.getClass().getName(), options);
-			ToolRunner.printGenericCommandUsage(System.out);
-			return -1;
-		}
+        CommandLine cmdline;
+        CommandLineParser parser = new GnuParser();
+        try {
+            cmdline = parser.parse(options, args);
+        } catch (ParseException exp) {
+            System.err.println("Error parsing command line: "
+                    + exp.getMessage());
+            return -1;
+        }
 
-		LOG.info("Tool name: " + this.getClass().getName());
-		LOG.info(" - input: " + inputPath);
-		LOG.info(" - output file: " + outputPath);
+        String inputPath = cmdline.getOptionValue("input",
+                System.getenv("input"));
+        String outputPath = cmdline.getOptionValue("output",
+                System.getenv("output"));
 
-		FileSystem.get(getConf()).delete(new Path(outputPath), true);
-		run(inputPath, outputPath);
-		return 0;
-	}
+        if (inputPath == null || outputPath == null) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp(this.getClass().getName(), options);
+            ToolRunner.printGenericCommandUsage(System.out);
+            return -1;
+        }
 
-	public SensorCountPerRoadPerDay() {
-	}
+        LOG.info("Tool name: " + this.getClass().getName());
+        LOG.info(" - input: " + inputPath);
+        LOG.info(" - output file: " + outputPath);
 
-	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new SensorCountPerRoadPerDay(), args);
-	}
+        FileSystem.get(getConf()).delete(new Path(outputPath), true);
+        run(inputPath, outputPath);
+        return 0;
+    }
+
+    public SensorCountPerRoadPerDay() {
+    }
+
+    public static void main(String[] args) throws Exception {
+        ToolRunner.run(new SensorCountPerRoadPerDay(), args);
+    }
 }
